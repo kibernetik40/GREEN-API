@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GREEN-API Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        textarea {
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GREEN-API Integration</h1>
+
+        <!-- Input fields for API parameters -->
+        <label for="idInstance">ID Instance:</label>
+        <input type="text" id="idInstance" placeholder="Enter your ID Instance">
+
+        <label for="apiTokenInstance">API Token Instance:</label>
+        <input type="text" id="apiTokenInstance" placeholder="Enter your API Token Instance">
+
+        <!-- Buttons to trigger API methods -->
+        <button id="getSettingsBtn">getSettings</button>
+        <button id="getStateInstanceBtn">getStateInstance</button>
+
+        <label for="recipient">Recipient (Phone Number):</label>
+        <input type="text" id="recipient" placeholder="Enter recipient's phone number">
+
+        <label for="message">Message:</label>
+        <textarea id="message" placeholder="Enter your message"></textarea>
+
+        <button id="sendMessageBtn">sendMessage</button>
+
+        <label for="fileUrl">File URL:</label>
+        <input type="text" id="fileUrl" placeholder="Enter file URL">
+
+        <button id="sendFileByUrlBtn">sendFileByUrl</button>
+
+        <!-- Output area for API responses -->
+        <label for="response">API Response:</label>
+        <textarea id="response" readonly></textarea>
+    </div>
+
+    <script>
+        async function callApi(method, endpoint, body = null) {
+            const idInstance = document.getElementById('idInstance').value;
+            const apiTokenInstance = document.getElementById('apiTokenInstance').value;
+
+            if (!idInstance || !apiTokenInstance) {
+                alert('Please provide both ID Instance and API Token Instance.');
+                return;
+            }
+
+            const url = `https://api.green-api.com/waInstance${idInstance}/${endpoint}/${apiTokenInstance}`;
+            const options = body
+                ? { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+                : { method };
+
+            try {
+                const response = await fetch(url, options);
+                const data = await response.json();
+                document.getElementById('response').value = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('response').value = `Error: ${error.message}`;
+            }
+        }
+
+        document.getElementById('getSettingsBtn').addEventListener('click', () => {
+            callApi('GET', 'getSettings');
+        });
+
+        document.getElementById('getStateInstanceBtn').addEventListener('click', () => {
+            callApi('GET', 'getStateInstance');
+        });
+
+        document.getElementById('sendMessageBtn').addEventListener('click', () => {
+            const recipient = document.getElementById('recipient').value;
+            const message = document.getElementById('message').value;
+
+            if (!recipient || !message) {
+                alert('Please provide both recipient phone number and message.');
+                return;
+            }
+
+            callApi('POST', 'sendMessage', { chatId: `${recipient}@c.us`, message });
+        });
+
+        document.getElementById('sendFileByUrlBtn').addEventListener('click', () => {
+            const recipient = document.getElementById('recipient').value;
+            const fileUrl = document.getElementById('fileUrl').value;
+
+            if (!recipient || !fileUrl) {
+                alert('Please provide both recipient phone number and file URL.');
+                return;
+            }
+
+            callApi('POST', 'sendFileByUrl', {
+                chatId: `${recipient}@c.us`,
+                urlFile: fileUrl,
+                fileName: fileUrl.split('/').pop()
+            });
+        });
+    </script>
+</body>
+</html>
